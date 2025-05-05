@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" >
+<head>
+  <meta charset="UTF-8">
+  <title>Player by Marlon Orozco</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel='stylesheet' href='https://unpkg.com/plyr@3/dist/plyr.css'>
+<link rel="stylesheet" href="./player.css" type="text/html">
+<style>
+  .container {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+.stats {
+    background-color: white;
+}
+</style>
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="container">
+	<audio>
+		<source src="https://bcradio.com.co/radio" type="audio/mpeg">
+		<source src="https://bcradio.com.co/radio" type="audio/ogg">
+	</audio>
+</div>
+<div class="stats">
+  <strong>Oyentes:</strong> <span id="listeners"></span>
+</div>
+<!-- Plyr resources and browser polyfills are specified in the pen settings -->
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/polyfill/v2/polyfill.min.js?features=es6,Array.prototype.includes,CustomEvent,Object.entries,Object.values,URL'></script>
+<script src='https://unpkg.com/plyr@3'></script><script  src="./audio.js"></script>
+</script>
+<script>
+    // URL del JSON público de Icecast
+    const url = 'https://bcradio.com.co/radio';
+  
+    // Mount point que queremos consultar
+    const targetMountPoint = '/radio.mp3';
+  
+    // Función para obtener estadísticas
+    function getIcecastStats() {
+        fetch(url)
+            .then(response => response.text()) // Obtener como texto para manipular
+            .then(text => {
+                // Reemplaza valores inválidos del JSON
+                const validJsonText = text.replace(/"title":\s*-/, '"title": "-"');
+                
+                // Parsear el JSON corregido
+                return JSON.parse(validJsonText);
+            })
+            .then(data => {
+                const sources = data.station.mounts;
+  
+                // Si hay varios mount points, será un array; si hay solo uno, será un objeto
+                const mountPoints = Array.isArray(sources) ? sources : [sources];
+  
+                // Busca el mount point específico
+                const targetSource = mountPoints.find(source => 
+                    source.url.endsWith(targetMountPoint)
+                );
+  
+                // Verifica si el elemento listeners existe en el DOM
+                const listenersElem = document.getElementById('listeners');
+                console.log(targetSource);
+  
+                if (listenersElem) {
+                    if (targetSource) {
+                        listenersElem.textContent = targetSource.listeners.current || 'N/A';
+                    } else {
+                        listenersElem.textContent = 'N/A';
+                    }
+                } else {
+                    console.error('Elemento listeners no encontrado.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener estadísticas:', error);
+            });
+    }
+  
+    // Llama a la función para obtener las estadísticas cuando se carga la página
+    window.onload = getIcecastStats;
+  </script>
+  
+
+</body>
+</html>
